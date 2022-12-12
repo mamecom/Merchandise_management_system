@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-
+	"bufio"
+	"os"
 )
 
 type Product_Info struct {
@@ -44,3 +45,41 @@ func menu() {
 	}
 }
 
+func add_product() {
+	var product Product_Info
+
+	var X_price int
+
+	scanner := bufio.NewScanner(os.Stdin)
+
+	//商品情報入力
+	fmt.Print("商品名：")
+	scanner.Scan()
+	product.name = scanner.Text()
+
+	//原価値情報入力
+	fmt.Print("原価：")
+	fmt.Scan(&X_price)
+	product.cost_price = X_price
+
+	//売価値情報入力
+	fmt.Print("売価：")
+	fmt.Scan(&X_price)
+	product.selling_price = X_price
+
+	//定価値情報入力
+	fmt.Print("定価：")
+	fmt.Scan(&X_price)
+	product.list_price = X_price
+
+	//在庫数情報入力
+	fmt.Print("在庫数：")
+	fmt.Scan(&X_price)
+	product.stock = X_price
+
+	//商品コード情報入力
+	fmt.Print("商品コード：")
+	scanner.Scan()
+	product.product_code = scanner.Text()
+
+}
