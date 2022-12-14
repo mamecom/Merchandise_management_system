@@ -2,11 +2,24 @@ package main
 
 import (
 	"fmt"
-	"bufio"
+	_ "bufio"
 	"os"
+	_ "io/ioutil"
+	"log"
+	_ "errors"
+	// "jszwec/csvutil"
 )
 
-type Product_Info struct {
+const (
+	ADD_PRODUCT = iota
+	FILE_NAME = "productfile.csv"
+	RESULT_TRUE = 1
+	RESULT_FALSE = -1
+)
+
+// todo: キャメルケースに修正すること
+type productInfo struct {
+	no int				//データNo.
 	name string			//商品名
 	cost_price int 		//原価
 	selling_price int	//売価
@@ -17,69 +30,44 @@ type Product_Info struct {
 
 func main() {
 
-	menu()
+	result := menu()
+	os.Exit(result)
+	
 }
 
 //　メニュー画面 
-func menu() {
-	println("===========商品管理システム===========")
-	println(" [追加: 1, 削除: 2, 更新: 3, 終了: 0]\n")
+func menu() int {
 	
-	var str int
-
-	for {
-		fmt.Scan(&str)
-
-		switch str {
-		case 1:
-			add_product()
-		case 2:
-			println("b")
-		case 3:
-			println("c")
-		case 0:
-			return
-		default:
-			return
-		}
+	println("===========商品管理システム===========")
+	
+	// todo: ファイルを作る処理
+	// ファイルの存在確認
+	err := Exists();
+	if err != nil {
+		log.Printf("debug: must make a file.")
+		createCSVFile();
 	}
+
+	fmt.Println(" [追加: 1, 削除: 2, 更新: 3, 終了: 0]\n\n\n")
+	
+	return 0
 }
 
-func add_product() {
-	var product Product_Info
+// ファイル存在確認関数
+func Exists() (error) {
+	_, err := os.Stat(FILE_NAME)
+	if os.IsNotExist(err) {
+		log.Printf("debug: not exists file.")
+		return err
+	}
+	return nil
+}
 
-	var X_price int
-
-	scanner := bufio.NewScanner(os.Stdin)
-
-	//商品情報入力
-	fmt.Print("商品名：")
-	scanner.Scan()
-	product.name = scanner.Text()
-
-	//原価値情報入力
-	fmt.Print("原価：")
-	fmt.Scan(&X_price)
-	product.cost_price = X_price
-
-	//売価値情報入力
-	fmt.Print("売価：")
-	fmt.Scan(&X_price)
-	product.selling_price = X_price
-
-	//定価値情報入力
-	fmt.Print("定価：")
-	fmt.Scan(&X_price)
-	product.list_price = X_price
-
-	//在庫数情報入力
-	fmt.Print("在庫数：")
-	fmt.Scan(&X_price)
-	product.stock = X_price
-
-	//商品コード情報入力
-	fmt.Print("商品コード：")
-	scanner.Scan()
-	product.product_code = scanner.Text()
-
+// ファイル作成関数
+func createCSVFile() error {
+	_, err := os.Create(FILE_NAME)
+	if err != nil {
+		return err
+	}
+	return nil
 }
