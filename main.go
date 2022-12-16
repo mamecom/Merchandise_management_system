@@ -46,6 +46,8 @@ func menu() int {
 		err := createCSVFile();
 		if err != nil {
 			fmt.Printf("ファイルを作成しました。")
+		} else {
+			return 0
 		}
 	}
 	err = fileWrite();
@@ -53,7 +55,12 @@ func menu() int {
 		log.Printf("alert: can`t write file")
 	}
 
-	fmt.Println(" [追加: 1, 削除: 2, 更新: 3, 終了: 0]\n\n\n")
+	err = fileRead();
+	if err != nil {
+		log.Printf("alert: can`t read file")
+	}
+
+	fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, 終了: 0]\n")
 	
 	return 0
 }
@@ -62,7 +69,7 @@ func menu() int {
 func Exists() error {
 	_, err := os.Stat(FILE_NAME)
 	if os.IsNotExist(err) {
-		log.Printf("debug: not exists file.")
+		log.Fatal(err)
 		return err
 	}
 	return nil
@@ -72,14 +79,27 @@ func Exists() error {
 func createCSVFile() error {
 	_, err := os.Create(FILE_NAME)
 	if err != nil {
+		log.Fatal(err)
 		return err
 	}
+	return nil
+}
+
+// NOTE: ファイル読み込み関数
+func fileRead() error {
+	data, err := ioutil.ReadFile(FILE_NAME)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	fmt.Println(string(data))
 	return nil
 }
 
 // NOTE: ファイル書き込み関数
 func fileWrite() error {
 	
+	// MEMO: Close不要
 	err := ioutil.WriteFile(FILE_NAME, []byte("aiueo感じ"), 0664)
 	if err != nil {
 		log.Fatal(err)
