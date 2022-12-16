@@ -4,7 +4,7 @@ import (
 	"fmt"
 	_ "bufio"
 	"os"
-	_ "io/ioutil"
+	"io/ioutil"
 	"log"
 	_ "errors"
 	// "jszwec/csvutil"
@@ -40,12 +40,17 @@ func menu() int {
 	
 	println("===========商品管理システム===========")
 	
-	// todo: ファイルを作る処理
-	// ファイルの存在確認
 	err := Exists();
 	if err != nil {
 		log.Printf("debug: must make a file.")
-		createCSVFile();
+		err := createCSVFile();
+		if err != nil {
+			fmt.Printf("ファイルを作成しました。")
+		}
+	}
+	err = fileWrite();
+	if err != nil {
+		log.Printf("alert: can`t write file")
 	}
 
 	fmt.Println(" [追加: 1, 削除: 2, 更新: 3, 終了: 0]\n\n\n")
@@ -53,8 +58,8 @@ func menu() int {
 	return 0
 }
 
-// ファイル存在確認関数
-func Exists() (error) {
+// NOTE: ファイル存在確認関数
+func Exists() error {
 	_, err := os.Stat(FILE_NAME)
 	if os.IsNotExist(err) {
 		log.Printf("debug: not exists file.")
@@ -63,10 +68,21 @@ func Exists() (error) {
 	return nil
 }
 
-// ファイル作成関数
+// NOTE: ファイル作成関数
 func createCSVFile() error {
 	_, err := os.Create(FILE_NAME)
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// NOTE: ファイル書き込み関数
+func fileWrite() error {
+	
+	err := ioutil.WriteFile(FILE_NAME, []byte("aiueo感じ"), 0664)
+	if err != nil {
+		log.Fatal(err)
 		return err
 	}
 	return nil
