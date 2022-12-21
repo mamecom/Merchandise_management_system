@@ -27,25 +27,32 @@ func main() {
 	
 }
 
-// TODO: アッパーで
+// TODO: アッパーキャメルで実装
 // TODO: 型判定＋エラーハンドリング
 // TODO: CSV形式で読み書きできるよう実装
 //　メニュー画面 
 func Menu() int {
+	var selecter int
 	
 	println("===========商品管理システム===========")
-	
-	
-	
-	AddProduct();
-
 	records := ReadCsv(FILE_NAME)
-
 	DisplayRecords(records)
 
-	fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, 終了: 0]\n")
-	
-	return 0
+	fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, 終了: 0]: ")
+	for {
+		fmt.Scan(&selecter)
+
+		switch selecter {
+			case 1:
+				AddProduct();
+			case 2:
+			case 3:
+			case 0:
+				return 0
+			default:
+				fmt.Printf("[追加: 1, 削除: 2, 更新: 3, 終了: 0]: ")
+			}
+	}
 }
 
 func FileInit() error {
@@ -122,7 +129,7 @@ func WriteCsv(record []string) {
 
 func DisplayRecords( records [][]string ) {
 	for _, record := range records {
-			fmt.Println(record)
+		fmt.Println(record)
 	}
 }
 
@@ -132,6 +139,7 @@ func UpdateNo( records [][]string ) {
 	}
 }
 
+// !WARNING: 入力時に型と違う値が入ると入力キャンセルされ、飛ばされる
 func AddProduct() error {
 	var productName, productCode string
 	var costPrice, sellingPrice, listPrice, stock int
@@ -170,5 +178,9 @@ func AddProduct() error {
 	WriteCsv(add)
 
 	return nil
+
+}
+
+func DeleteProducts() {
 
 }
