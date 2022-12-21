@@ -147,10 +147,25 @@ func UpdateNo( records [][]string ) {
 
 // !WARNING: 入力時に型と違う値が入ると入力キャンセルされ、飛ばされる
 func AddProduct() error {
+	csvData := ReadCsv(FILE_NAME)
+	productName, costPrice, sellingPrice, listPrice, stock, productCode := InputProductInfo()
+	
+	lastArr := csvData[len(csvData) - 1]
+	id := lastArr[0]
+	intId, _ := strconv.Atoi(id)
+	intId = intId + 1
+	add := []string{strconv.Itoa(intId), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
+
+	WriteCsv(add)
+
+	return nil
+
+}
+
+// OPTIMIZE: HACK: 戻り値をまとめて返すようにする
+func InputProductInfo() (string, int, int, int, int, string) {
 	var productName, productCode string
 	var costPrice, sellingPrice, listPrice, stock int
-
-	csvData := ReadCsv(FILE_NAME)
 
 	//商品情報入力
 	fmt.Print("商品名：")
@@ -177,19 +192,9 @@ func AddProduct() error {
 	//商品コード情報入力
 	fmt.Print("商品コード：")
 	fmt.Scanf("%s", &productCode)
+
+	return productName, costPrice, sellingPrice, listPrice, stock, productCode
 	
-	// id := len(csvData)
-
-	lastArr := csvData[len(csvData) - 1]
-	id := lastArr[0]
-	intId, _ := strconv.Atoi(id)
-	intId = intId + 1
-	add := []string{strconv.Itoa(intId), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
-
-	WriteCsv(add)
-
-	return nil
-
 }
 
 func DeleteProducts() error {
@@ -230,3 +235,22 @@ func Remove(delNo int) error {
 
 	return nil
 }
+
+// func UpdateProducts() error {
+// 	var UpadateNo int
+
+// 	records := ReadCsv(FILE_NAME)
+
+// 	fmt.Printf("更新したいNoは：")
+// 	fmt.Scanf("%d", &UpadateNo)
+
+// 	for cnt, record := range records {
+// 		if cnt == UpadateNo {
+// 			err := WriteCsv(record)
+// 			if err != nil {
+// 				log.Fatal(err)
+// 				return err
+// 			}
+// 		}
+// 	}
+// }
