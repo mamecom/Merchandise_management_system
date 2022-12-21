@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	// "io/ioutil"
 	"log"
 	"encoding/csv"
 	"strconv"
@@ -27,9 +26,6 @@ func main() {
 	
 }
 
-// TODO: アッパーキャメルで実装
-// TODO: 型判定＋エラーハンドリング
-// TODO: CSV形式で読み書きできるよう実装
 //　メニュー画面 
 func Menu() int {
 	var selecter int
@@ -258,7 +254,6 @@ func UpdateProducts(updateNo int ) error {
 		log.Fatal(err)
 		return err
 	}
-	fmt.Printf("aasaaaaa")
 	for cnt, record := range records {
 		if cnt == updateNo {
 			productName, costPrice, sellingPrice, listPrice, stock, productCode := InputProductInfo()
