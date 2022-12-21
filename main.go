@@ -44,10 +44,11 @@ func Menu() int {
 
 		switch selecter {
 			case 1:
-				AddProduct();
+				AddProduct()
 			case 2:
 				DeleteProducts()
 			case 3:
+				UpdateProductsInfo()
 			case 0:
 				return 0
 			default:			
@@ -139,13 +140,7 @@ func DisplayRecords( records [][]string ) {
 	}
 }
 
-func UpdateNo( records [][]string ) {
-	for no, record := range records {
-		record[0] = strconv.Itoa(no)
-	}
-}
-
-// !WARNING: 入力時に型と違う値が入ると入力キャンセルされ、飛ばされる
+// !FIXME: 入力時に型と違う値が入ると入力キャンセルされ、飛ばされる
 func AddProduct() error {
 	csvData := ReadCsv(FILE_NAME)
 	productName, costPrice, sellingPrice, listPrice, stock, productCode := InputProductInfo()
@@ -236,21 +231,50 @@ func Remove(delNo int) error {
 	return nil
 }
 
-// func UpdateProducts() error {
-// 	var UpadateNo int
+// TODO: 指定した要素のみを更新できるように修正
+func UpdateProductsInfo() error {
+	var updateNo int
 
-// 	records := ReadCsv(FILE_NAME)
+	fmt.Printf("更新したいNoは：")
+	fmt.Scanf("%d", &updateNo)
 
-// 	fmt.Printf("更新したいNoは：")
-// 	fmt.Scanf("%d", &UpadateNo)
+	UpdateProducts(updateNo)
 
-// 	for cnt, record := range records {
-// 		if cnt == UpadateNo {
-// 			err := WriteCsv(record)
-// 			if err != nil {
-// 				log.Fatal(err)
-// 				return err
-// 			}
-// 		}
+	return nil
+}
+
+// func UpdateNo( records [][]string ) {
+// 	for no, record := range records {
+// 		record[0] = strconv.Itoa(no)
 // 	}
 // }
+
+func UpdateProducts(updateNo int ) error {
+
+	records := ReadCsv(FILE_NAME)
+	os.Remove(FILE_NAME)
+	err := CreateCSV()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	fmt.Printf("aasaaaaa")
+	for cnt, record := range records {
+		if cnt == updateNo {
+			productName, costPrice, sellingPrice, listPrice, stock, productCode := InputProductInfo()
+			updateInfo := []string{strconv.Itoa(cnt), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
+			err := WriteCsv(updateInfo)
+			if err != nil {
+				log.Fatal(err)
+				return err
+			}
+		} else {
+			err := WriteCsv(record)
+			if err != nil {
+				log.Fatal(err)
+				return err
+			}
+		}
+	}
+	return nil
+}
