@@ -38,19 +38,19 @@ func Menu() int {
 	records := ReadCsv(FILE_NAME)
 	DisplayRecords(records)
 
-	fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, 終了: 0]: ")
 	for {
+		fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, 終了: 0]: ")
 		fmt.Scan(&selecter)
 
 		switch selecter {
 			case 1:
 				AddProduct();
 			case 2:
+				DeleteProducts()
 			case 3:
 			case 0:
 				return 0
-			default:
-				fmt.Printf("[追加: 1, 削除: 2, 更新: 3, 終了: 0]: ")
+			default:			
 			}
 	}
 }
@@ -67,12 +67,15 @@ func FileInit() error {
 			return err
 		} else {
 			fmt.Printf("ファイルを作成しました。")
-			// ヘッダー実装
-			header := []string{"No","商品名", "原価", "売価", "定価", "在庫数", "商品コード"}
-			WriteCsv(header)
+			MakeHeader()
 		}
 	}
 	return nil
+}
+
+func MakeHeader()  {
+	header := []string{"No","商品名", "原価", "売価", "定価", "在庫数", "商品コード"}
+	WriteCsv(header)
 }
 
 // NOTE: ファイル存在確認関数
@@ -110,7 +113,7 @@ func ReadCsv(fileName string) [][]string {
 }
 
 // NOTE: ファイル書き込み関数
-func WriteCsv(record []string) {
+func WriteCsv(record []string) error {
 	// レコード追加
     file, err := os.OpenFile(FILE_NAME, os.O_WRONLY|os.O_APPEND, 0644)
     if err != nil {
@@ -123,8 +126,11 @@ func WriteCsv(record []string) {
     err = writer.Write(record)
     if err != nil {
         log.Fatal("Error:", err)
+		return err
     }
     writer.Flush()
+
+	return nil
 }
 
 func DisplayRecords( records [][]string ) {
@@ -172,8 +178,13 @@ func AddProduct() error {
 	fmt.Print("商品コード：")
 	fmt.Scanf("%s", &productCode)
 	
-	id := len(csvData)
-	add := []string{strconv.Itoa(id), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
+	// id := len(csvData)
+
+	lastArr := csvData[len(csvData) - 1]
+	id := lastArr[0]
+	intId, _ := strconv.Atoi(id)
+	intId = intId + 1
+	add := []string{strconv.Itoa(intId), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
 
 	WriteCsv(add)
 
@@ -181,6 +192,41 @@ func AddProduct() error {
 
 }
 
-func DeleteProducts() {
+func DeleteProducts() error {
+	var delNo int
+	cansel := 0
 
+	fmt.Printf("削除したいNoは：")
+	fmt.Scanf("%d", &delNo)
+
+	if delNo > cansel {
+		err := Remove(delNo)
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Remove(delNo int) error {
+	records := ReadCsv(FILE_NAME)
+	os.Remove(FILE_NAME)
+	err := CreateCSV()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	for cnt, record := range records {
+		if cnt != delNo {
+			err := WriteCsv(record)
+			if err != nil {
+				log.Fatal(err)
+				return err
+			}
+		}
+	}
+
+	return nil
 }
