@@ -17,8 +17,7 @@ const (
 
 func main() {
 
-	err := FileInit()
-	if err != nil {
+	if err := FileInit(); err != nil {
 		os.Exit(1)
 	}
 	result := Menu()
@@ -54,16 +53,13 @@ func Menu() int {
 
 func FileInit() error {
 	csvExist := IsCsvExist();
-	if csvExist {
-		log.Printf("debug: already make a file.")			
-	} else {
-		log.Printf("debug: must make a file.")
+	if !csvExist {
+		log.Println("debug: must make a file.")
 
-		err := CreateCSV();
-		if err != nil {
+		if err := CreateCSV(); err != nil {
 			return err
 		} else {
-			fmt.Printf("ファイルを作成しました。")
+			fmt.Println("ファイルを作成しました。")
 			MakeHeader()
 		}
 	}
@@ -147,7 +143,9 @@ func AddProduct() error {
 	intId = intId + 1
 	add := []string{strconv.Itoa(intId), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
 
-	WriteCsv(add)
+	if err := WriteCsv(add); err != nil {
+		return err
+	}
 
 	return nil
 
@@ -196,8 +194,7 @@ func DeleteProducts() error {
 	fmt.Scanf("%d", &delNo)
 
 	if delNo > cansel {
-		err := Remove(delNo)
-		if err != nil {
+		if err := Remove(delNo); err != nil {
 			log.Fatal(err)
 			return err
 		}
@@ -216,8 +213,7 @@ func Remove(delNo int) error {
 	}
 	for cnt, record := range records {
 		if cnt != delNo {
-			err := WriteCsv(record)
-			if err != nil {
+			if err := WriteCsv(record); err != nil {
 				log.Fatal(err)
 				return err
 			}
@@ -234,7 +230,9 @@ func UpdateProductsInfo() error {
 	fmt.Printf("更新したいNoは：")
 	fmt.Scanf("%d", &updateNo)
 
-	UpdateProducts(updateNo)
+	if err := UpdateProducts(updateNo); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -249,8 +247,7 @@ func UpdateProducts(updateNo int ) error {
 
 	records := ReadCsv(FILE_NAME)
 	os.Remove(FILE_NAME)
-	err := CreateCSV()
-	if err != nil {
+	if err := CreateCSV(); err != nil {
 		log.Fatal(err)
 		return err
 	}
@@ -258,14 +255,12 @@ func UpdateProducts(updateNo int ) error {
 		if cnt == updateNo {
 			productName, costPrice, sellingPrice, listPrice, stock, productCode := InputProductInfo()
 			updateInfo := []string{strconv.Itoa(cnt), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
-			err := WriteCsv(updateInfo)
-			if err != nil {
+			if err := WriteCsv(updateInfo); err != nil {
 				log.Fatal(err)
 				return err
 			}
 		} else {
-			err := WriteCsv(record)
-			if err != nil {
+			if err := WriteCsv(record); err != nil {
 				log.Fatal(err)
 				return err
 			}
