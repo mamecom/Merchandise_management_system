@@ -116,8 +116,7 @@ func WriteCsv(record []string) error {
 
     // 追加するレコードはstringのスライスで定義
     writer := csv.NewWriter(file)
-    err = writer.Write(record)
-    if err != nil {
+    if err = writer.Write(record); err != nil {
         log.Fatal("Error:", err)
 		return err
     }
@@ -143,7 +142,9 @@ func AddProduct() error {
 	intId = intId + 1
 	add := []string{strconv.Itoa(intId), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
 
-	WriteCsv(add)
+	if err := WriteCsv(add); err != nil {
+		return err
+	}
 
 	return nil
 
