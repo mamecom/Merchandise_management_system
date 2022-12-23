@@ -143,9 +143,7 @@ func AddProduct() error {
 	intId = intId + 1
 	add := []string{strconv.Itoa(intId), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
 
-	if err := WriteCsv(add); err != nil {
-		return err
-	}
+	WriteCsv(add)
 
 	return nil
 
@@ -237,12 +235,6 @@ func UpdateProductsInfo() error {
 	return nil
 }
 
-// func UpdateNo( records [][]string ) {
-// 	for no, record := range records {
-// 		record[0] = strconv.Itoa(no)
-// 	}
-// }
-
 func UpdateProducts(updateNo int ) error {
 
 	records := ReadCsv(FILE_NAME)
@@ -254,7 +246,10 @@ func UpdateProducts(updateNo int ) error {
 	for cnt, record := range records {
 		if cnt == updateNo {
 			productName, costPrice, sellingPrice, listPrice, stock, productCode := InputProductInfo()
-			updateInfo := []string{strconv.Itoa(cnt), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice),strconv.Itoa(stock), productCode}
+			updateInfo := []string{ strconv.Itoa(cnt), productName, 
+									strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), 
+									strconv.Itoa(listPrice),strconv.Itoa(stock), productCode,
+									}
 			if err := WriteCsv(updateInfo); err != nil {
 				log.Fatal(err)
 				return err
