@@ -11,13 +11,8 @@ import (
 const (
 	ADD_PRODUCT = iota
 	FILE_NAME   = "productfile.csv"
+	SORTNO      = 0 // No列のソート先指定
 )
-
-// type Writer struct {
-// 	Comma rune // Field delimiter (set to ',' by NewWriter)
-// 	// UseCRLF bool // True to use \r\n as the line terminator
-// 	w *bufio.Writer
-// }
 
 func main() {
 
@@ -36,7 +31,7 @@ func Menu() int {
 	DisplayRecords()
 
 	for {
-		fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, 終了: 0]: ")
+		fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, ソート: 4,終了: 0]: ")
 		fmt.Scan(&selecter)
 
 		switch selecter {
@@ -46,6 +41,8 @@ func Menu() int {
 			DeleteProducts()
 		case 3:
 			UpdateProductsInfo()
+		case 4:
+			SortRecords()
 		case 0:
 			return 0
 		default:
@@ -141,7 +138,6 @@ func WriteCsvs(records [][]string) {
 	if err := w.WriteAll(records); err != nil {
 		log.Fatal("Error:", err)
 	}
-	fmt.Println(ReadCsv(FILE_NAME))
 }
 
 func DisplayRecords() {
@@ -293,4 +289,33 @@ func UpdateProducts(updateNo int) error {
 		}
 	}
 	return nil
+}
+
+func SortRecords() {
+	var flg string
+
+	for {
+		fmt.Println("No.を昇順ソートしますか？ y / n")
+		fmt.Scan(&flg)
+		switch flg {
+		case "y":
+			records := ReadCsv(FILE_NAME)
+			sorted := bubbleSort(records)
+			WriteCsvs(sorted)
+			DisplayRecords()
+		case "n":
+			return
+		}
+	}
+}
+
+func bubbleSort(records [][]string) [][]string {
+	for i := 1; i < len(records); i++ {
+		for j := 1; j < len(records)-i; j++ {
+			if records[j][0] > records[j+1][0] {
+				records[j], records[j+1] = records[j+1], records[j]
+			}
+		}
+	}
+	return records
 }
