@@ -22,7 +22,7 @@ const (
 
 func main() {
 
-	if err := FileInit(); err != nil {
+	if err := FileInit(FILE_NAME); err != nil {
 		os.Exit(1)
 	}
 	result := Menu()
@@ -61,24 +61,24 @@ func Menu() int {
 	}
 }
 
-func FileInit() error {
+func FileInit(fileName string) error {
 	csvExist := IsCsvExist()
 	if !csvExist {
 		log.Println("debug: must make a file.")
 
-		if err := CreateCSV(FILE_NAME); err != nil {
+		if err := CreateCSV(fileName); err != nil {
 			return err
 		} else {
 			fmt.Println("ファイルを作成しました。")
-			MakeHeader()
+			MakeHeader(fileName)
 		}
 	}
 	return nil
 }
 
-func MakeHeader() {
+func MakeHeader(fileName string) {
 	header := []string{"No", "商品名", "原価", "売価", "定価", "在庫数", "商品コード"}
-	WriteCsv(header, FILE_NAME)
+	WriteCsv(header, fileName)
 }
 
 // NOTE: ファイル存在確認関数
@@ -314,6 +314,11 @@ func SearchRecord() {
 
 func Assoc(records [][]string, str string) [][]string {
 	searchRecords := [][]string{}
+
+	// ヘッダー格納
+	header := []string{"No", "商品名", "原価", "売価", "定価", "在庫数", "商品コード"}
+	searchRecords = append(searchRecords, header)
+
 	for _, record := range records {
 		for _, data := range record {
 			if data == str {
