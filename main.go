@@ -11,6 +11,7 @@ import (
 const (
 	ADD_PRODUCT = iota
 	FILE_NAME   = "productfile.csv"
+	FILE_SEARCH = "search.csv"
 )
 
 // type Writer struct {
@@ -32,11 +33,12 @@ func main() {
 // 　メニュー画面
 func Menu() int {
 	var selecter int
+	Display := true
 
 	DisplayRecords()
 
 	for {
-		fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, 終了: 0]: ")
+		fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, 検索: 5, 終了: 0]: ")
 		fmt.Scan(&selecter)
 
 		switch selecter {
@@ -46,11 +48,16 @@ func Menu() int {
 			DeleteProducts()
 		case 3:
 			UpdateProductsInfo()
+		case 5:
+			SearchRecord()
+			Display = false
 		case 0:
 			return 0
 		default:
 		}
-		DisplayRecords()
+		if Display {
+			DisplayRecords()
+		}
 	}
 }
 
@@ -59,7 +66,7 @@ func FileInit() error {
 	if !csvExist {
 		log.Println("debug: must make a file.")
 
-		if err := CreateCSV(); err != nil {
+		if err := CreateCSV(FILE_NAME); err != nil {
 			return err
 		} else {
 			fmt.Println("ファイルを作成しました。")
@@ -71,7 +78,7 @@ func FileInit() error {
 
 func MakeHeader() {
 	header := []string{"No", "商品名", "原価", "売価", "定価", "在庫数", "商品コード"}
-	WriteCsv(header)
+	WriteCsv(header, FILE_NAME)
 }
 
 // NOTE: ファイル存在確認関数
@@ -81,8 +88,8 @@ func IsCsvExist() bool {
 }
 
 // NOTE: ファイル作成関数
-func CreateCSV() error {
-	_, err := os.Create(FILE_NAME)
+func CreateCSV(fileName string) error {
+	_, err := os.Create(fileName)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -109,9 +116,9 @@ func ReadCsv(fileName string) [][]string {
 }
 
 // NOTE: ファイル書き込み関数
-func WriteCsv(record []string) error {
+func WriteCsv(record []string, filename string) error {
 	// レコード追加
-	file, err := os.OpenFile(FILE_NAME, os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatal("Error:", err)
 	}
@@ -128,9 +135,9 @@ func WriteCsv(record []string) error {
 	return nil
 }
 
-func WriteCsvs(records [][]string) {
+func WriteCsvs(records [][]string, fileName string) {
 	// レコード追加
-	file, err := os.OpenFile(FILE_NAME, os.O_WRONLY, 0644)
+	file, err := os.OpenFile(fileName, os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal("Error:", err)
 	}
@@ -141,7 +148,6 @@ func WriteCsvs(records [][]string) {
 	if err := w.WriteAll(records); err != nil {
 		log.Fatal("Error:", err)
 	}
-	fmt.Println(ReadCsv(FILE_NAME))
 }
 
 func DisplayRecords() {
@@ -171,7 +177,7 @@ func AddProduct() error {
 	intId = intId + 1
 	add := []string{strconv.Itoa(intId), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice), strconv.Itoa(stock), productCode}
 
-	if err := WriteCsv(add); err != nil {
+	if err := WriteCsv(add, FILE_NAME); err != nil {
 		return err
 	}
 
@@ -238,11 +244,11 @@ func Remove(delNo string) {
 	for index, record := range records {
 		if record[0] == delNo { //MEMO: Noを同じ値かを判定
 			os.Remove(FILE_NAME)
-			if err := CreateCSV(); err != nil {
+			if err := CreateCSV(FILE_NAME); err != nil {
 				log.Fatal(err)
 			}
 			removedRecords := append(records[:index], records[index+1:]...)
-			WriteCsvs(removedRecords)
+			WriteCsvs(removedRecords, FILE_NAME)
 			isDeltered = true
 			break
 		}
@@ -270,7 +276,7 @@ func UpdateProducts(updateNo int) error {
 
 	records := ReadCsv(FILE_NAME)
 	os.Remove(FILE_NAME)
-	if err := CreateCSV(); err != nil {
+	if err := CreateCSV(FILE_NAME); err != nil {
 		log.Fatal(err)
 		return err
 	}
@@ -281,16 +287,55 @@ func UpdateProducts(updateNo int) error {
 				strconv.Itoa(costPrice), strconv.Itoa(sellingPrice),
 				strconv.Itoa(listPrice), strconv.Itoa(stock), productCode,
 			}
-			if err := WriteCsv(updateInfo); err != nil {
+			if err := WriteCsv(updateInfo, FILE_NAME); err != nil {
 				log.Fatal(err)
 				return err
 			}
 		} else {
-			if err := WriteCsv(record); err != nil {
+			if err := WriteCsv(record, FILE_NAME); err != nil {
 				log.Fatal(err)
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+func SearchRecord() {
+	var searchStr string
+
+	records := ReadCsv(FILE_NAME)
+
+	fmt.Print("検索する文字を入力してください: ")
+	fmt.Scan(&searchStr)
+	searchRecords := Assoc(records, searchStr)
+	DisplaySeachRecors(searchRecords)
+}
+
+func Assoc(records [][]string, str string) [][]string {
+	searchRecords := [][]string{}
+	for _, record := range records {
+		for _, data := range record {
+			if data == str {
+				searchRecords = append(searchRecords, record)
+				break
+			}
+		}
+	}
+	return searchRecords
+}
+
+func DisplaySeachRecors(searchRecords [][]string) {
+	CreateCSV(FILE_SEARCH)
+	WriteCsvs(searchRecords, FILE_SEARCH)
+	println("----------------------検索結果------------------------")
+	w := csv.NewWriter(os.Stdout)
+	w.Comma = '\t'
+	if err := w.WriteAll(searchRecords); err != nil {
+		log.Fatal("Error:", err)
+	}
+	w.Flush()
+	println("-----------------------------------------------------")
+
+	os.Remove(FILE_SEARCH)
 }
