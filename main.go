@@ -11,7 +11,6 @@ import (
 const (
 	ADD_PRODUCT = iota
 	FILE_NAME   = "productfile.csv"
-	SORTNO      = 0 // No列のソート先指定
 )
 
 func main() {
@@ -292,28 +291,41 @@ func UpdateProducts(updateNo int) error {
 }
 
 func SortRecords() {
-	var flg string
+	var sortType string
+	var sorted [][]string
 
 	for {
-		fmt.Println("No.を昇順ソートしますか？ y / n")
-		fmt.Scan(&flg)
-		switch flg {
+		fmt.Printf("[ソートパターンを選択してください。昇順: x, 降順: y, キャンセル: c]: ")
+		fmt.Scan(&sortType)
+		switch sortType {
 		case "y":
-			records := ReadCsv(FILE_NAME)
-			sorted := bubbleSort(records)
-			WriteCsvs(sorted)
-			DisplayRecords()
-		case "n":
+			sorted = BubbleSort(sortType)
+		case "x":
+			sorted = BubbleSort(sortType)
+		case "c":
 			return
 		}
+		WriteCsvs(sorted)
+		DisplayRecords()
 	}
 }
 
-func bubbleSort(records [][]string) [][]string {
+func BubbleSort(sortType string) [][]string {
+	topToBottom := "y"
+	bottomToTop := "x"
+
+	records := ReadCsv(FILE_NAME)
+
 	for i := 1; i < len(records); i++ {
 		for j := 1; j < len(records)-i; j++ {
-			if records[j][0] > records[j+1][0] {
-				records[j], records[j+1] = records[j+1], records[j]
+			if sortType == topToBottom {
+				if records[j][0] < records[j+1][0] {
+					records[j], records[j+1] = records[j+1], records[j]
+				}
+			} else if sortType == bottomToTop {
+				if records[j][0] > records[j+1][0] {
+					records[j], records[j+1] = records[j+1], records[j]
+				}
 			}
 		}
 	}
