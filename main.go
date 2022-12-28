@@ -33,9 +33,9 @@ func main() {
 // 　メニュー画面
 func Menu() int {
 	var selecter int
-	Display := true
+	isDisplay := true
 
-	DisplayRecords()
+	DisplayRecords(FILE_NAME)
 
 	for {
 		fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, 検索: 5, 終了: 0]: ")
@@ -50,13 +50,15 @@ func Menu() int {
 			UpdateProductsInfo()
 		case 5:
 			SearchRecord()
-			Display = false
+			isDisplay = false
 		case 0:
 			return 0
 		default:
 		}
-		if Display {
-			DisplayRecords()
+		if isDisplay {
+			DisplayRecords(FILE_NAME)
+		} else {
+			isDisplay = true
 		}
 	}
 }
@@ -150,10 +152,17 @@ func WriteCsvs(records [][]string, fileName string) {
 	}
 }
 
-func DisplayRecords() {
+func DisplayRecords(fileName string) {
+	var records [][]string
 
-	println("----------------------商品管理システム------------------------")
-	records := ReadCsv(FILE_NAME)
+	if fileName != FILE_NAME {
+		println("----------------------検索結果------------------------")
+		records = ReadCsv(fileName)
+		os.Remove(fileName)
+	} else {
+		println("----------------------商品管理システム------------------------")
+		records = ReadCsv(fileName)
+	}
 
 	w := csv.NewWriter(os.Stdout)
 	w.Comma = '\t'
@@ -308,11 +317,17 @@ func SearchRecord() {
 
 	fmt.Print("検索する文字を入力してください: ")
 	fmt.Scan(&searchStr)
-	searchRecords := Assoc(records, searchStr)
-	DisplaySeachRecors(searchRecords)
+	searchRecords := SearchExec(records, searchStr)
+	CreateAndWriteSearchCSV(searchRecords, FILE_SEARCH)
+	DisplayRecords(FILE_SEARCH)
 }
 
-func Assoc(records [][]string, str string) [][]string {
+func CreateAndWriteSearchCSV(searchRecords [][]string, fileName string) {
+	CreateCSV(fileName)
+	WriteCsvs(searchRecords, fileName)
+}
+
+func SearchExec(records [][]string, str string) [][]string {
 	searchRecords := [][]string{}
 
 	// ヘッダー格納
@@ -328,19 +343,4 @@ func Assoc(records [][]string, str string) [][]string {
 		}
 	}
 	return searchRecords
-}
-
-func DisplaySeachRecors(searchRecords [][]string) {
-	CreateCSV(FILE_SEARCH)
-	WriteCsvs(searchRecords, FILE_SEARCH)
-	println("----------------------検索結果------------------------")
-	w := csv.NewWriter(os.Stdout)
-	w.Comma = '\t'
-	if err := w.WriteAll(searchRecords); err != nil {
-		log.Fatal("Error:", err)
-	}
-	w.Flush()
-	println("-----------------------------------------------------")
-
-	os.Remove(FILE_SEARCH)
 }
