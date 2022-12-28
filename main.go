@@ -11,11 +11,12 @@ import (
 const (
 	ADD_PRODUCT = iota
 	FILE_NAME   = "productfile.csv"
+	FILE_SEARCH = "search.csv"
 )
 
 func main() {
 
-	if err := FileInit(); err != nil {
+	if err := FileInit(FILE_NAME); err != nil {
 		os.Exit(1)
 	}
 	result := Menu()
@@ -26,11 +27,12 @@ func main() {
 // 　メニュー画面
 func Menu() int {
 	var selecter int
+	isDisplay := true
 
-	DisplayRecords()
+	DisplayRecords(FILE_NAME)
 
 	for {
-		fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, ソート: 4,終了: 0]: ")
+		fmt.Printf("\n[追加: 1, 削除: 2, 更新: 3, ソート: 4, 検索: 5, 終了: 0]: ")
 		fmt.Scan(&selecter)
 
 		switch selecter {
@@ -42,32 +44,39 @@ func Menu() int {
 			UpdateProductsInfo()
 		case 4:
 			SortRecords()
+		case 5:
+			SearchRecord()
+			isDisplay = false
 		case 0:
 			return 0
 		default:
 		}
-		DisplayRecords()
+		if isDisplay {
+			DisplayRecords(FILE_NAME)
+		} else {
+			isDisplay = true
+		}
 	}
 }
 
-func FileInit() error {
+func FileInit(fileName string) error {
 	csvExist := IsCsvExist()
 	if !csvExist {
 		log.Println("debug: must make a file.")
 
-		if err := CreateCSV(); err != nil {
+		if err := CreateCSV(fileName); err != nil {
 			return err
 		} else {
 			fmt.Println("ファイルを作成しました。")
-			MakeHeader()
+			MakeHeader(fileName)
 		}
 	}
 	return nil
 }
 
-func MakeHeader() {
+func MakeHeader(fileName string) {
 	header := []string{"No", "商品名", "原価", "売価", "定価", "在庫数", "商品コード"}
-	WriteCsv(header)
+	WriteCsv(header, fileName)
 }
 
 // NOTE: ファイル存在確認関数
@@ -77,8 +86,8 @@ func IsCsvExist() bool {
 }
 
 // NOTE: ファイル作成関数
-func CreateCSV() error {
-	_, err := os.Create(FILE_NAME)
+func CreateCSV(fileName string) error {
+	_, err := os.Create(fileName)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -105,9 +114,9 @@ func ReadCsv(fileName string) [][]string {
 }
 
 // NOTE: ファイル書き込み関数
-func WriteCsv(record []string) error {
+func WriteCsv(record []string, filename string) error {
 	// レコード追加
-	file, err := os.OpenFile(FILE_NAME, os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatal("Error:", err)
 	}
@@ -124,9 +133,9 @@ func WriteCsv(record []string) error {
 	return nil
 }
 
-func WriteCsvs(records [][]string) {
+func WriteCsvs(records [][]string, fileName string) {
 	// レコード追加
-	file, err := os.OpenFile(FILE_NAME, os.O_WRONLY, 0644)
+	file, err := os.OpenFile(fileName, os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal("Error:", err)
 	}
@@ -139,10 +148,17 @@ func WriteCsvs(records [][]string) {
 	}
 }
 
-func DisplayRecords() {
+func DisplayRecords(fileName string) {
+	var records [][]string
 
-	println("----------------------商品管理システム------------------------")
-	records := ReadCsv(FILE_NAME)
+	if fileName != FILE_NAME {
+		println("----------------------検索結果------------------------")
+		records = ReadCsv(fileName)
+		os.Remove(fileName)
+	} else {
+		println("----------------------商品管理システム------------------------")
+		records = ReadCsv(fileName)
+	}
 
 	w := csv.NewWriter(os.Stdout)
 	w.Comma = '\t'
@@ -166,7 +182,7 @@ func AddProduct() error {
 	intId = intId + 1
 	add := []string{strconv.Itoa(intId), productName, strconv.Itoa(costPrice), strconv.Itoa(sellingPrice), strconv.Itoa(listPrice), strconv.Itoa(stock), productCode}
 
-	if err := WriteCsv(add); err != nil {
+	if err := WriteCsv(add, FILE_NAME); err != nil {
 		return err
 	}
 
@@ -233,11 +249,11 @@ func Remove(delNo string) {
 	for index, record := range records {
 		if record[0] == delNo { //MEMO: Noを同じ値かを判定
 			os.Remove(FILE_NAME)
-			if err := CreateCSV(); err != nil {
+			if err := CreateCSV(FILE_NAME); err != nil {
 				log.Fatal(err)
 			}
 			removedRecords := append(records[:index], records[index+1:]...)
-			WriteCsvs(removedRecords)
+			WriteCsvs(removedRecords, FILE_NAME)
 			isDeltered = true
 			break
 		}
@@ -265,7 +281,7 @@ func UpdateProducts(updateNo int) error {
 
 	records := ReadCsv(FILE_NAME)
 	os.Remove(FILE_NAME)
-	if err := CreateCSV(); err != nil {
+	if err := CreateCSV(FILE_NAME); err != nil {
 		log.Fatal(err)
 		return err
 	}
@@ -276,12 +292,12 @@ func UpdateProducts(updateNo int) error {
 				strconv.Itoa(costPrice), strconv.Itoa(sellingPrice),
 				strconv.Itoa(listPrice), strconv.Itoa(stock), productCode,
 			}
-			if err := WriteCsv(updateInfo); err != nil {
+			if err := WriteCsv(updateInfo, FILE_NAME); err != nil {
 				log.Fatal(err)
 				return err
 			}
 		} else {
-			if err := WriteCsv(record); err != nil {
+			if err := WriteCsv(record, FILE_NAME); err != nil {
 				log.Fatal(err)
 				return err
 			}
@@ -332,4 +348,39 @@ func BubbleSort(sortType string) [][]string {
 		}
 	}
 	return records
+}
+
+func SearchRecord() {
+	var searchStr string
+
+	records := ReadCsv(FILE_NAME)
+
+	fmt.Print("検索する文字を入力してください: ")
+	fmt.Scan(&searchStr)
+	searchRecords := SearchExec(records, searchStr)
+	CreateAndWriteSearchCSV(searchRecords, FILE_SEARCH)
+	DisplayRecords(FILE_SEARCH)
+}
+
+func CreateAndWriteSearchCSV(searchRecords [][]string, fileName string) {
+	CreateCSV(fileName)
+	WriteCsvs(searchRecords, fileName)
+}
+
+func SearchExec(records [][]string, str string) [][]string {
+	searchRecords := [][]string{}
+
+	// ヘッダー格納
+	header := []string{"No", "商品名", "原価", "売価", "定価", "在庫数", "商品コード"}
+	searchRecords = append(searchRecords, header)
+
+	for _, record := range records {
+		for _, data := range record {
+			if data == str {
+				searchRecords = append(searchRecords, record)
+				break
+			}
+		}
+	}
+	return searchRecords
 }
