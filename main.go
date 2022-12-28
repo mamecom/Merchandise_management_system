@@ -323,8 +323,8 @@ func SortRecords() {
 		default:
 			return
 		}
-		WriteCsvs(sorted)
-		DisplayRecords()
+		WriteCsvs(sorted, FILE_NAME)
+		DisplayRecords(FILE_NAME)
 	}
 }
 
