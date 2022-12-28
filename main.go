@@ -304,6 +304,8 @@ func SortRecords() {
 			sorted = BubbleSort(sortType)
 		case "c":
 			return
+		default:
+			return
 		}
 		WriteCsvs(sorted)
 		DisplayRecords()
